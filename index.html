@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>STEBs Test</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    p {
+      word-break: break-word;
+    }
+
+    #airport, #final {
+      display: block;
+      padding: 10px;
+      background: #f5f5f5;
+      margin: 5px 0;
+      border-radius: 8px;
+    }
+
+    button {
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>STEBs Test</h2>
+
+<p>出発地：関空（KIX）</p>
+
+<label>乗り継ぎエリア：</label><br>
+<select id="transit" onchange="generateScenario()">
+  <option value="">選択してください</option>
+  <option value="EU">ヨーロッパ</option>
+  <option value="NorthAmerica">北米</option>
+  <option value="ASIA">アジア</option>
+  <option value="OCEANIA">オセアニア</option>
+  <option value="MiddleEast">中東</option>
+  <option value="SINGAPORE">シンガポール</option>
+</select>
+
+<p>乗り継ぎ空港：<span id="airport">未選択</span></p>
+<p>最終目的地：<span id="final">未選択</span></p>
+
+<hr>
+
+<label>① 乗り継ぎ空港でのSTEBsの扱いは？</label><br>
+<select id="answer1">
+  <option value="">選択</option>
+  <option value="ok">〇</option>
+  <option value="ng">✖</option>
+  <option value="conditional">〇か✖</option>
+</select>
+
+<br><br>
+
+<label>② 最終目的地まで使用可能？</label><br>
+<select id="answer2">
+  <option value="">選択</option>
+  <option value="ok">使用可</option>
+  <option value="ng">使用不可</option>
+</select>
+
+<br>
+<button onclick="check()">答え合わせ</button>
+<br>
+<button onclick="nextQuestion()">次の問題</button>
+<button onclick="resetAll()">リセット</button>
+<h3 id="result"></h3>
+<p id="explanation"></p>
+
+<script>
+
+// 空港データ（タイプ＋行き先制御）
+const airports = {
+
+  EU: [
+    { name: "パリ（CDG）", country: "フランス", flag: "https://flagcdn.com/w40/fr.png", type: "conditional", finals: ["EU"] },
+    { name: "アムステルダム（AMS）", country: "オランダ", flag: "https://flagcdn.com/w40/nl.png", type: "conditional", finals: ["EU"] },
+    { name: "ミュンヘン（MUC）", country: "ドイツ", flag: "https://flagcdn.com/w40/de.png", type: "conditional", finals: ["EU"] },
+    { name: "ヘルシンキ（HEL）", country: "フィンランド", flag: "https://flagcdn.com/w40/fi.png", type: "conditional", finals: ["EU"] }
+  ],
+
+  NorthAmerica: [
+    { name: "ロサンゼルス（LAX）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png", type: "ng", finals: ["US"] },
+    { name: "グアム（GUM）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png", type: "ng", finals: ["US"] },
+    { name: "ホノルル（HNL）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png", type: "ng", finals: ["US"] },
+    { name: "サンフランシスコ（SFO）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png", type: "ng", finals: ["US"] },
+    { name: "バンクーバー（YVR）", country: "カナダ", flag: "https://flagcdn.com/w40/ca.png", type: "conditional", finals: ["US"] },
+    { name: "トロント（YYZ）", country: "カナダ", flag: "https://flagcdn.com/w40/ca.png", type: "conditional", finals: ["US"] }
+  ],
+
+  OCEANIA: [
+    { name: "ケアンズ（CNS）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png", type: "ng", finals: ["OCEANIA"] },
+    { name: "メルボルン（MEL）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png", type: "ng", finals: ["OCEANIA"] },
+    { name: "シドニー（SYD）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png", type: "ng", finals: ["OCEANIA"] }
+  ],
+
+  MiddleEast: [
+    { name: "ドバイ（DXB）", country: "UAE", flag: "https://flagcdn.com/w40/ae.png", type: "conditional", finals: ["EU"] },
+    { name: "アブダビ（AUH）", country: "UAE", flag: "https://flagcdn.com/w40/ae.png", type: "conditional", finals: ["EU"] },
+    { name: "ドーハ（DOH）", country: "カタール", flag: "https://flagcdn.com/w40/qa.png", type: "conditional", finals: ["EU"] },
+    { name: "イスタンブール（IST）", country: "トルコ", flag: "https://flagcdn.com/w40/tr.png", type: "conditional", finals: ["EU"] }
+  ],
+
+  ASIA: [
+    { name: "台北（TPE）", country: "台湾", flag: "https://flagcdn.com/w40/tw.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "高雄（KHH）", country: "台湾", flag: "https://flagcdn.com/w40/tw.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    //{ name: "台中（RMQ）", country: "台湾", flag: "https://flagcdn.com/w40/tw.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "バンコク（BKK）", country: "タイ", flag: "https://flagcdn.com/w40/th.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "ドンムアン（DMK）", country: "タイ", flag: "https://flagcdn.com/w40/th.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "セブ（CEB）", country: "フィリピン", flag: "https://flagcdn.com/w40/ph.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "マニラ（MNL）", country: "フィリピン", flag: "https://flagcdn.com/w40/ph.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "ハノイ（HAN）", country: "ベトナム", flag: "https://flagcdn.com/w40/vn.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "ホーチミン（SGN）", country: "ベトナム", flag: "https://flagcdn.com/w40/vn.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "ダナン（DAD）", country: "ベトナム", flag: "https://flagcdn.com/w40/vn.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "香港（HKG）", country: "香港", flag: "https://flagcdn.com/w40/hk.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "マカオ（MFM）", country: "マカオ", flag: "https://flagcdn.com/w40/mo.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+    { name: "クアラルンプール（KUL）", country: "マレーシア", flag: "https://flagcdn.com/w40/my.png", type: "conditional", finals: ["EU","US","OCEANIA"] },
+
+    { name: "ソウル・金浦（GMP）", country: "韓国", flag: "https://flagcdn.com/w40/kr.png", type: "ok", finals: ["EU","US","OCEANIA"] },
+    { name: "ソウル・仁川（ICN）", country: "韓国", flag: "https://flagcdn.com/w40/kr.png", type: "ok", finals: ["EU","US","OCEANIA"] },
+
+    { name: "北京（PEK）", country: "中国", flag: "https://flagcdn.com/w40/cn.png", type: "conditional", finals: ["EU","US","OCEANIA","ASIA"], china: true },
+    { name: "上海（PVG）", country: "中国", flag: "https://flagcdn.com/w40/cn.png", type: "conditional", finals: ["EU","US","OCEANIA","ASIA"], china: true },
+    { name: "広州（CAN）", country: "中国", flag: "https://flagcdn.com/w40/cn.png", type: "conditional", finals: ["EU","US","OCEANIA","ASIA"], china: true }
+
+    //{ name: "デリー（DEL）", country: "インド", flag: "https://flagcdn.com/w40/in.png", type: "ng", finals: ["EU","US","OCEANIA"] },
+    //{ name: "ジャカルタ（CGK）", country: "インドネシア", flag: "https://flagcdn.com/w40/id.png", type: "ng", finals: ["EU","US","OCEANIA"] },
+    //{ name: "デンパサール（DPS）", country: "インドネシア", flag: "https://flagcdn.com/w40/id.png", type: "ng", finals: ["EU","US","OCEANIA"] }
+  ],
+
+  SINGAPORE: [
+    { name: "シンガポール（SIN）", country: "シンガポール", flag: "https://flagcdn.com/w40/sg.png", type: "conditional", finals: ["EU","US","OCEANIA","ASIA"]}
+  ]
+
+};
+
+  const SG_NG_COUNTRIES = [
+    "アメリカ","オーストラリア","ロシア","スイス","フランス","ドイツ","スペイン","イタリア","オランダ","オーストリア","デンマーク","スウェーデン","ノルウェー","フィンランド"
+];
+
+// 表示名
+const finalAirports = {
+
+  EU: [
+    { city: "パリ（CDG）", country: "フランス", flag: "https://flagcdn.com/w40/fr.png" },
+    { city: "ロンドン（LHR）", country: "イギリス", flag: "https://flagcdn.com/w40/gb.png" },
+    { city: "フランクフルト（FRA）", country: "ドイツ", flag: "https://flagcdn.com/w40/de.png" },
+    { city: "ミュンヘン（MUC）", country: "ドイツ", flag: "https://flagcdn.com/w40/de.png" },
+    { city: "アムステルダム（AMS）", country: "オランダ", flag: "https://flagcdn.com/w40/nl.png" },
+    { city: "チューリッヒ（ZRH）", country: "スイス", flag: "https://flagcdn.com/w40/ch.png" },
+    { city: "ウィーン（VIE）", country: "オーストリア", flag: "https://flagcdn.com/w40/at.png" },
+    { city: "ローマ（FCO）", country: "イタリア", flag: "https://flagcdn.com/w40/it.png" },
+    { city: "ミラノ（MXP）", country: "イタリア", flag: "https://flagcdn.com/w40/it.png" },
+    { city: "マドリード（MAD）", country: "スペイン", flag: "https://flagcdn.com/w40/es.png" },
+    { city: "バルセロナ（BCN）", country: "スペイン", flag: "https://flagcdn.com/w40/es.png" },
+    { city: "ヘルシンキ（HEL）", country: "フィンランド", flag: "https://flagcdn.com/w40/fi.png" },
+    { city: "コペンハーゲン（CPH）", country: "デンマーク", flag: "https://flagcdn.com/w40/dk.png" },
+    { city: "ストックホルム（ARN）", country: "スウェーデン", flag: "https://flagcdn.com/w40/se.png" },
+    { city: "オスロ（OSL）", country: "ノルウェー", flag: "https://flagcdn.com/w40/no.png" }
+  ],
+
+  US: [
+    { city: "ニューヨーク（JFK）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "ロサンゼルス（LAX）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "シカゴ（ORD）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "サンフランシスコ（SFO）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "ダラス（DFW）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "アトランタ（ATL）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "シアトル（SEA）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "ボストン（BOS）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "ラスベガス（LAS）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "デンバー（DEN）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" }
+  ],
+
+  ASIA: [
+    { city: "シンガポール（SIN）", country: "シンガポール", flag: "https://flagcdn.com/w40/sg.png" },
+    { city: "バンコク（BKK）", country: "タイ", flag: "https://flagcdn.com/w40/th.png" },
+    { city: "クアラルンプール（KUL）", country: "マレーシア", flag: "https://flagcdn.com/w40/my.png" },
+    { city: "ジャカルタ（CGK）", country: "インドネシア", flag: "https://flagcdn.com/w40/id.png" },
+    { city: "マニラ（MNL）", country: "フィリピン", flag: "https://flagcdn.com/w40/ph.png" },
+    { city: "ホーチミン（SGN）", country: "ベトナム", flag: "https://flagcdn.com/w40/vn.png" },
+    { city: "ハノイ（HAN）", country: "ベトナム", flag: "https://flagcdn.com/w40/vn.png" },
+    { city: "台北（TPE）", country: "台湾", flag: "https://flagcdn.com/w40/tw.png" },
+    { city: "ソウル（ICN）", country: "韓国", flag: "https://flagcdn.com/w40/kr.png" },
+    { city: "香港（HKG）", country: "香港", flag: "https://flagcdn.com/w40/hk.png" },
+    { city: "北京（PEK）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" },
+    { city: "上海（PVG）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" },
+    { city: "広州（CAN）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" }
+  ],
+
+  OCEANIA: [
+    { city: "シドニー（SYD）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png" },
+    { city: "メルボルン（MEL）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png" },
+    { city: "ブリスベン（BNE）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png" },
+    { city: "パース（PER）", country: "オーストラリア", flag: "https://flagcdn.com/w40/au.png" },
+    { city: "オークランド（AKL）", country: "ニュージーランド", flag: "https://flagcdn.com/w40/nz.png" }
+  ],
+
+  MiddleEast: [
+    { city: "ドバイ（DXB）", country: "UAE", flag: "https://flagcdn.com/w40/ae.png" },
+    { city: "アブダビ（AUH）", country: "UAE", flag: "https://flagcdn.com/w40/ae.png" },
+    { city: "ドーハ（DOH）", country: "カタール", flag: "https://flagcdn.com/w40/qa.png" },
+    { city: "イスタンブール（IST）", country: "トルコ", flag: "https://flagcdn.com/w40/tr.png" },
+    { city: "テルアビブ（TLV）", country: "イスラエル", flag: "https://flagcdn.com/w40/il.png" }
+  ]
+
+};
+
+// シナリオ生成
+function generateScenario() {
+  const transit = document.getElementById("transit").value;
+  if (!transit) return;
+
+  const list = airports[transit];
+  const selected = list[Math.floor(Math.random() * list.length)];
+
+  document.getElementById("airport").innerHTML =
+  selected.name +
+  ' <img src="' + selected.flag + '" width="20" style="vertical-align:middle;"> ' +
+  selected.country;
+  document.getElementById("airport").dataset.type = selected.type;
+  document.getElementById("airport").dataset.china = selected.china ? "true" : "false";
+  
+  // 最終目的地（空港ランダム）
+const finalCode = selected.finals[Math.floor(Math.random() * selected.finals.length)];
+
+const listFinal = finalAirports[finalCode];
+
+// 同じ都市を除外
+const filteredFinals = listFinal.filter(f => !selected.name.includes(f.city.split("（")[0]));
+
+// 保険（全部消えたら元に戻す）
+const usableFinals = filteredFinals.length > 0 ? filteredFinals : listFinal;
+
+// ランダム選択
+const selectedFinal = usableFinals[Math.floor(Math.random() * usableFinals.length)];
+document.getElementById("final").innerHTML =
+  selectedFinal.city +
+  ' <img src="' + selectedFinal.flag + '" width="20" style="vertical-align:middle;"> ' +
+  selectedFinal.country;
+
+// 判定用
+document.getElementById("final").dataset.value = finalCode;
+document.getElementById("final").dataset.country = selectedFinal.country;
+}
+
+// 判定ロジック（優先順位あり）
+function getCorrectAnswers(type, final) {
+
+  let q1, q2, explanation;
+
+  // Q1：乗り継ぎ空港
+  if (type === "ok") q1 = "ok";
+  else if (type === "ng") q1 = "ng";
+  else q1 = "conditional";
+
+  // Q2（最終目的地）
+  if (type === "ok") {
+    q2 = "ok";
+    explanation = "STEBsの使用は可能です.";
+  }
+
+  else if (type === "ng") {
+    q2 = "ng";
+    explanation = "STEBsは使用できません.乗り継ぎ空港でスーツケースに液体物を入れ預け直すことが可能か確認してください．";
+  }
+
+  else { // conditional
+
+  const country = document.getElementById("final").dataset.country;
+  const isChinaTransit = document.getElementById("airport").dataset.china === "true";
+  const isSingaporeTransit =
+    document.getElementById("transit").value === "SINGAPORE";
+
+  // ① 中国で入国 → NG
+  if (isChinaTransit) {
+    q2 = "ng";
+    explanation = "中国で入国する場合、STEBsは使用できません。";
+  }
+
+  // ② アメリカ・オーストラリア → NG
+  else if (country === "アメリカ" || country === "オーストラリア") {
+    q2 = "ng";
+    explanation = "アメリカ・オーストラリア行きではSTEBsは認められていません。";
+  }
+
+  // ③ シンガポール経由（別ルール）
+  else if (isSingaporeTransit) {
+
+    if (SG_NG_COUNTRIES.includes(country)) {
+      q2 = "ng";
+      explanation = "シンガポール経由ではこの国へのSTEBs持ち込みは不可です。";
+    } else {
+      q2 = "ok";
+      explanation = "シンガポール経由でもこの国ならSTEBsは使用可能です。";
+    }
+
+  }
+
+  // ④ その他 → OK
+  else {
+    q2 = "ok";
+    explanation = "STEBsの使用は可能です。";
+  }
+}
+  return { q1, q2, explanation };
+}
+
+// 判定
+function check() {
+  const type = document.getElementById("airport").dataset.type;
+  const final = document.getElementById("final").dataset.value;
+
+  const user1 = document.getElementById("answer1").value;
+  const user2 = document.getElementById("answer2").value;
+
+  if (!type || !final || !user1 || !user2) {
+    alert("すべて選択してください");
+    return;
+  }
+
+  const correct = getCorrectAnswers(type, final);
+
+  let resultText = "";
+
+  if (user1 === correct.q1 && user2 === correct.q2) {
+    resultText = "⭕ 正解！";
+  } else {
+    resultText = "❌ 不正解";
+  }
+
+  document.getElementById("result").innerText = resultText;
+  document.getElementById("explanation").innerText = correct.explanation;
+
+}
+// 次の問題
+function nextQuestion() {
+  document.getElementById("answer1").value = "";
+  document.getElementById("answer2").value = "";
+
+  document.getElementById("result").innerText = "";
+  document.getElementById("explanation").innerText = "";
+
+  generateScenario();
+}
+
+// 完全リセット
+function resetAll() {
+  document.getElementById("transit").value = "";
+  document.getElementById("answer1").value = "";
+  document.getElementById("answer2").value = "";
+
+  document.getElementById("airport").innerText = "未選択";
+  document.getElementById("final").innerText = "未選択";
+
+  document.getElementById("result").innerText = "";
+  document.getElementById("explanation").innerText = "";
+
+  delete document.getElementById("airport").dataset.type;
+  delete document.getElementById("final").dataset.value;
+}
+</script>
+
+</body>
+</html>
