@@ -15,6 +15,14 @@
       background: #f2f4f8;
     }
 
+   h2 {
+      text-align: center;
+      font-size: 25px;
+      color: #1890ff;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
     .card {
       background: white;
       padding: 12px;
@@ -62,6 +70,27 @@
       border-radius: 8px;
     }
 
+    #check {
+      background: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
+    #nextBtn {
+      background: #52c41a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
+    #resetBtn {
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
     button {
       border-radius: 8px;
     }
@@ -74,7 +103,7 @@
     }
 
     #explanation {
-      background: #bae7ff;
+      background: #f7f459;
       padding: 10px;
       border-radius: 10px;
     }
@@ -137,10 +166,10 @@
 </select>
 
 <br>
-<button onclick="check()">答え合わせ</button>
+<button id="check" onclick="check()">答え合わせ</button>
 <br>
-<button onclick="nextQuestion()">次の問題</button>
-<button onclick="resetAll()">リセット</button>
+<button id="nextBtn" onclick="nextQuestion()">次の問題</button>
+<button id="resetBtn" onclick="resetAll()">リセット</button>
 <h3 id="result"></h3>
 <p id="explanation"></p>
 
@@ -334,12 +363,12 @@ function getCorrectAnswers(type, final) {
   // Q2（最終目的地）
   if (type === "ok") {
     q2 = "ok";
-    explanation = "STEBsの使用は可能です.";
+    explanation = "STEBsの使用は可能です。";
   }
 
   else if (type === "ng") {
     q2 = "ng";
-    explanation = "STEBsは使用できません.乗り継ぎ空港でスーツケースに液体物を入れ預け直すことが可能か確認してください．";
+    explanation = "STEBsは使用できません。乗り継ぎ空港でスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
   }
 
   else { // conditional
@@ -358,7 +387,7 @@ function getCorrectAnswers(type, final) {
   // ② アメリカ・オーストラリア → NG
   else if (country === "アメリカ" || country === "オーストラリア") {
     q2 = "ng";
-    explanation = "アメリカ・オーストラリア行きではSTEBsは認められていません。";
+    explanation = "アメリカ・オーストラリア行きではSTEBsは使用できません。乗り継ぎ空港でスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
   }
 
   // ③ シンガポール経由（別ルール）
@@ -366,10 +395,10 @@ function getCorrectAnswers(type, final) {
 
     if (SG_NG_COUNTRIES.includes(country)) {
       q2 = "ng";
-      explanation = "シンガポール経由ではこの国へのSTEBs持ち込みは不可です。";
+      explanation = "STEBsは使用できません。シンガポールでスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
     } else {
       q2 = "ok";
-      explanation = "シンガポール経由でもこの国ならSTEBsは使用可能です。";
+      explanation = "STEBsの使用は可能です。";
     }
 
   }
