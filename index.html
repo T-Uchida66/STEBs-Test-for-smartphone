@@ -123,11 +123,38 @@
       color: #222;           /* 文字色を固定 */
       background-color: #fff;
     }
+
+    .title {
+      position: relative;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .title h2 {
+      margin: 0;
+      font-size: 25px;
+      color: #1890ff;
+      font-weight: 700;
+    }
+
+    .title-icon {
+      position: absolute;
+      right: 0;
+      top: -10px;   /* ←ここで上下調整 */
+
+      width: 175px;
+      height: auto;
+
+      transform: translateY(15px); /* ←下にずらす */
+    }
   </style>
 </head>
 <body>
 
-<h2>STEBs Test</h2>
+<div class="title">
+  <h2>STEBs Test</h2>
+  <img src="https://www.centrair.jp/assets/img/flight/flight-stebs-pic01.png" class="title-icon">
+</div>
 
 <p>出発地：関空（KIX）</p>
 
@@ -151,9 +178,9 @@
 <label>① 乗り継ぎ空港でのSTEBsの扱いは？</label><br>
 <select id="answer1">
   <option value="">選択</option>
-  <option value="ok">〇</option>
-  <option value="ng">✖</option>
-  <option value="conditional">〇か✖</option>
+  <option value="ok">◯</option>
+  <option value="ng">✕</option>
+  <option value="conditional">◯か✕</option>
 </select>
 
 <br><br>
@@ -175,7 +202,7 @@
 
 <script>
 
-// 空港データ（タイプ＋行き先制御）
+// 乗り継ぎ空港データ（タイプ＋行き先制御）
 const airports = {
 
   EU: [
@@ -244,7 +271,7 @@ const airports = {
     "アメリカ","オーストラリア","ロシア","スイス","フランス","ドイツ","スペイン","イタリア","オランダ","オーストリア","デンマーク","スウェーデン","ノルウェー","フィンランド"
 ];
 
-// 表示名
+// 最終目的地リスト
 const finalAirports = {
 
   EU: [
@@ -275,7 +302,12 @@ const finalAirports = {
     { city: "シアトル（SEA）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
     { city: "ボストン（BOS）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
     { city: "ラスベガス（LAS）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
-    { city: "デンバー（DEN）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" }
+    { city: "デンバー（DEN）", country: "アメリカ", flag: "https://flagcdn.com/w40/us.png" },
+    { city: "バンクーバー（YVR）", country: "カナダ", flag: "https://flagcdn.com/w40/ca.png" },
+    { city: "トロント（YYZ）", country: "カナダ", flag: "https://flagcdn.com/w40/ca.png" },
+    { city: "メキシコシティ（MEX）", country: "メキシコ", flag: "https://flagcdn.com/w40/mx.png" },
+    { city: "カンクン（CUN）", country: "メキシコ", flag: "https://flagcdn.com/w40/mx.png" }
+
   ],
 
   ASIA: [
@@ -291,7 +323,10 @@ const finalAirports = {
     { city: "香港（HKG）", country: "香港", flag: "https://flagcdn.com/w40/hk.png" },
     { city: "北京（PEK）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" },
     { city: "上海（PVG）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" },
-    { city: "広州（CAN）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" }
+    { city: "広州（CAN）", country: "中国", flag: "https://flagcdn.com/w40/cn.png" },
+    { city: "バリ（DPS）", country: "インドネシア", flag: "https://flagcdn.com/w40/id.png" },
+    { city: "デリー（DEL）", country: "インド", flag: "https://flagcdn.com/w40/in.png" },
+    { city: "ムンバイ（BOM）", country: "インド", flag: "https://flagcdn.com/w40/in.png" }
   ],
 
   OCEANIA: [
@@ -465,7 +500,28 @@ function resetAll() {
   delete document.getElementById("airport").dataset.type;
   delete document.getElementById("final").dataset.value;
 }
-</script>
 
+//-------------------------------------------------------------------
+//memo
+
+//STEBs使用可能判断
+//〇：ok
+//✖：ng
+//〇か✖：conditional
+//
+//空港リスト
+//乗り継ぎ空港：{ name: "空港名（3レター）", country: "国名", flag: "国旗URL", type: "STEBs使用可能判断", finals: ["目的地制御"] }
+//最終目的地：{ city: "空港名（3レター）", country: "国名", flag: "国旗URL" }
+//
+//
+//
+//
+//
+//
+//
+//
+//-------------------------------------------------------------------
+
+</script>
 </body>
 </html>
