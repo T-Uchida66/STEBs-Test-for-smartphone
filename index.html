@@ -175,9 +175,9 @@
 </div>
 <hr>
 
-<label>① 乗り継ぎ空港でのSTEBsの扱いは？</label><br>
+<label>① STEBs適応は？</label><br>
 <select id="answer1">
-  <option value="">選択</option>
+  <option value="">選択してください</option>
   <option value="ok">◯</option>
   <option value="ng">✕</option>
   <option value="conditional">◯か✕</option>
@@ -185,9 +185,9 @@
 
 <br><br>
 
-<label>② 最終目的地まで使用可能？</label><br>
+<label>② STEBsは使えますか？</label><br>
 <select id="answer2">
-  <option value="">選択</option>
+  <option value="">選択してください</option>
   <option value="ok">使用可</option>
   <option value="ng">使用不可</option>
 </select>
@@ -422,7 +422,7 @@ function getCorrectAnswers(type, final) {
   // ② アメリカ・オーストラリア → NG
   else if (country === "アメリカ" || country === "オーストラリア") {
     q2 = "ng";
-    explanation = "アメリカ・オーストラリア行きではSTEBsは使用できません。乗り継ぎ空港でスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
+    explanation = "アメリカ・オーストラリアが最終目的地の場合、STEBsは使用できません。乗り継ぎ空港でスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
   }
 
   // ③ シンガポール経由（別ルール）
