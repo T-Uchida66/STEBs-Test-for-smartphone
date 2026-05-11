@@ -417,13 +417,19 @@ function getCorrectAnswers(type, final) {
     document.getElementById("transit").value === "SINGAPORE";
 
   // ① 中国で入国 → NG
-  if (isChinaTransit) {
-    q2 = "ng";
-    explanation = "中国で入国する場合、STEBsは使用できません。";
-  }
+  // if (isChinaTransit) {
+
+  //if (country === "中国") {
+    //q2 = "ng";
+    //explanation = "中国で入国する場合、STEBsは機内持ち込み不可です。スーツケースに入れてください。";
+  //} else {
+    //q2 = "ok";
+    //explanation = "入国しない場合、STEBsは使用可能です。";
+  //}
+//}
 
   // ② アメリカ・オーストラリア → NG
-  else if (country === "アメリカ" || country === "オーストラリア") {
+   if (country === "アメリカ" || country === "オーストラリア") {
     q2 = "ng";
     explanation = "アメリカ・オーストラリアが最終目的地の場合、STEBsは使用できません。乗り継ぎ空港でスーツケースに液体物を入れ、預け直すことが可能か確認してください。";
   }
